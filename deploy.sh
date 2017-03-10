@@ -5,7 +5,9 @@
 
 root=$(cd `dirname $0` && pwd);
 
-mvn -DskipTests=true clean install
+
+# mvn -DskipTests=true -f s3-sample/pom.xml clean install
+mvn -DskipTests=true -f s3-service-broker/pom.xml clean install
 
 function reset(){
 
@@ -44,4 +46,4 @@ function deploy_sample_app(){
 reset
 deploy_service_broker_app
 configure_service_broker
-deploy_sample_app
+#deploy_sample_app

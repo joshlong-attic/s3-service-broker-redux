@@ -29,7 +29,8 @@ import java.util.stream.Collectors;
 
 
 /**
- * A service component for managing the lifecycle of AWS S3 credential bindings for service instances in this service broker's catalog
+ * A service component for managing the lifecycle of AWS S3 credential bindings
+ * for service instances in this service broker's catalog
  */
 @Service
 public class S3Service {
