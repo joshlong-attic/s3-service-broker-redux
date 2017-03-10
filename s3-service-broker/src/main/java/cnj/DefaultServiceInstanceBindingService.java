@@ -1,5 +1,7 @@
 package cnj;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingDoesNotExistException;
 import org.springframework.cloud.servicebroker.exception.ServiceInstanceBindingExistsException;
 import org.springframework.cloud.servicebroker.model.CreateServiceInstanceAppBindingResponse;
@@ -9,71 +11,70 @@ import org.springframework.cloud.servicebroker.model.DeleteServiceInstanceBindin
 import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingService;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
-public class DefaultServiceInstanceBindingService
-		implements ServiceInstanceBindingService {
+public class DefaultServiceInstanceBindingService implements ServiceInstanceBindingService {
 
-	private final ServiceInstanceBindingRepository bindingRepository;
+	private final ServiceInstanceBindingRepository serviceInstanceBindingRepository;
+	private final ServiceInstanceRepository serviceInstanceRepository;
+	private final Log log = LogFactory.getLog(getClass());
 
-	public DefaultServiceInstanceBindingService(ServiceInstanceBindingRepository repository) {
-		this.bindingRepository = repository;
+	public DefaultServiceInstanceBindingService(ServiceInstanceBindingRepository sibr,
+	                                            ServiceInstanceRepository sir) {
+		this.serviceInstanceBindingRepository = sibr;
+		this.serviceInstanceRepository = sir;
 	}
 
 	@Override
-	public CreateServiceInstanceBindingResponse createServiceInstanceBinding(
-			CreateServiceInstanceBindingRequest request) {
+	public CreateServiceInstanceBindingResponse createServiceInstanceBinding(CreateServiceInstanceBindingRequest request) {
 
-		String bindingId = request.getBindingId();
-		String serviceInstanceId = request.getServiceInstanceId();
+		this.assertBindingDoesNotExist(request);
 
-		ServiceInstanceBinding binding = bindingRepository.findOne(bindingId);
-		if (binding != null) {
-			throw new ServiceInstanceBindingExistsException(serviceInstanceId, bindingId);
-		}
+		ServiceInstance serviceInstance = this.serviceInstanceRepository.findOne(request.getServiceInstanceId());
 
-		String uri =
-				this.createCredentialedConnection(serviceInstanceId, bindingId, UUID.randomUUID().toString());
+		String username = serviceInstance.getUsername(),
+				secretAccessKey = serviceInstance.getSecretAccessKey(),
+				accessKeyId = serviceInstance.getAccessKeyId();
 
-		binding = new ServiceInstanceBinding(bindingId,
-				serviceInstanceId, uri , null, request.getBoundAppGuid());
-		bindingRepository.save(binding);
+		Map<String, Object> credentials = new HashMap<>();
+		credentials.put("userName", username);
+		credentials.put("accessKeyId", accessKeyId);
+		credentials.put("secretAccessKey", secretAccessKey);
 
-		return new CreateServiceInstanceAppBindingResponse().withCredentials(Collections.singletonMap("uri", uri));
+		ServiceInstanceBinding binding = new ServiceInstanceBinding(
+				request.getBindingId(),
+				request.getServiceInstanceId(),
+				username, accessKeyId, secretAccessKey, null,
+				String.class.cast(request.getBindResource().getOrDefault("app_guid", request.getAppGuid())));
+
+		this.serviceInstanceBindingRepository.save(binding);
+
+		return new CreateServiceInstanceAppBindingResponse().withCredentials(credentials);
 	}
 
+	private void assertBindingDoesNotExist(CreateServiceInstanceBindingRequest request) {
+		ServiceInstanceBinding binding;
+		if ((binding = this.serviceInstanceBindingRepository.findOne(request.getBindingId())) != null) {
+			throw new ServiceInstanceBindingExistsException(
+					binding.getServiceInstanceId(), binding.getId());
+		}
+	}
 
 	@Override
 	public void deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request) {
 		String bindingId = request.getBindingId();
-		ServiceInstanceBinding binding = getServiceInstanceBinding(bindingId);
+		ServiceInstanceBinding binding = this.serviceInstanceBindingRepository.findOne(bindingId);
+		assertServiceInstanceDoesExist(bindingId, binding);
+		this.serviceInstanceBindingRepository.delete(bindingId);
+	}
 
+	private void assertServiceInstanceDoesExist(String bindingId, ServiceInstanceBinding binding) {
 		if (binding == null) {
 			throw new ServiceInstanceBindingDoesNotExistException(bindingId);
 		}
-
-		deleteCredentialedConnection(binding.getServiceInstanceId(), bindingId);
-
-		// todo mongo.deleteUser(binding.getServiceInstanceId(), bindingId);
-		bindingRepository.delete(bindingId);
 	}
-
-	private ServiceInstanceBinding getServiceInstanceBinding(String id) {
-		return bindingRepository.findOne(id);
-	}
-
-	// TODO: return a valid URI
-	private String createCredentialedConnection(String database, String username, String password) {
-		return null;
-	}
-
-	// TODO: return a valid URI
-	private void deleteCredentialedConnection(String serviceInstanceId, String bindingId) {
-
-	}
-
 }
 
 

@@ -39,11 +39,17 @@ function configure_service_broker(){
 
 function deploy_sample_app(){
     cd ${root}/s3-sample
-    cf create-service amazon-s3 basic s3-service
+    cf create-service $service_broker basic s3-service
     cf push
 }
 
-reset
-deploy_service_broker_app
-configure_service_broker
-#deploy_sample_app
+function update_broker(){
+  cd ${root}/${service_broker}
+  cf push
+}
+
+#reset
+#deploy_service_broker_app
+#configure_service_broker
+update_broker
+deploy_sample_app
