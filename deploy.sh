@@ -34,7 +34,7 @@ function deploy_service_broker_app(){
 
 function configure_service_broker(){
     cf create-service-broker amazon-s3 admin admin http://s3-broker.local.pcfdev.io -v
-    cf enable-service-access amazon-s3
+    cf enable-service-access s3-service-broker -p s3-basic
 }
 
 function deploy_sample_app(){
@@ -46,4 +46,4 @@ function deploy_sample_app(){
 reset
 deploy_service_broker_app
 configure_service_broker
-deploy_sample_app
+#deploy_sample_app
