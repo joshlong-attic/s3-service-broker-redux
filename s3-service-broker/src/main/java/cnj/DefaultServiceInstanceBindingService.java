@@ -10,7 +10,6 @@ import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingSer
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -35,14 +34,14 @@ public class DefaultServiceInstanceBindingService
 			throw new ServiceInstanceBindingExistsException(serviceInstanceId, bindingId);
 		}
 
-		Map<String, Object> credentials =
-				Collections.singletonMap("uri", this.createCredentialedConnection(serviceInstanceId, bindingId, UUID.randomUUID().toString()));
+		String uri =
+				this.createCredentialedConnection(serviceInstanceId, bindingId, UUID.randomUUID().toString());
 
 		binding = new ServiceInstanceBinding(bindingId,
-				serviceInstanceId, credentials, null, request.getBoundAppGuid());
+				serviceInstanceId, uri , null, request.getBoundAppGuid());
 		bindingRepository.save(binding);
 
-		return new CreateServiceInstanceAppBindingResponse().withCredentials(credentials);
+		return new CreateServiceInstanceAppBindingResponse().withCredentials(Collections.singletonMap("uri", uri));
 	}
 
 
