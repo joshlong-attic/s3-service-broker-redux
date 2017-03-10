@@ -17,14 +17,14 @@ class CatalogConfiguration {
 
 		List<ServiceDefinition> definitions = Collections.singletonList(
 				new ServiceDefinition(
-						UUID.randomUUID().toString(),
+						"0941881744418",
 						"s3-service-broker",
 						"A simple AWS S3 service broker implementation",
 						true,
 						false,
 						Collections.singletonList(
-								new Plan(UUID.randomUUID().toString(),
-										"s3-basic",
+								new Plan("841794608635",
+										"basic",
 										"Amazon S3 bucket with unlimited storage",
 										getPlanMetadata(), true, true)),
 						Arrays.asList("s3", "storage", "cache", "AWS"),

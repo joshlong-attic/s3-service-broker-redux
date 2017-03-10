@@ -5,19 +5,19 @@
 
 root=$(cd `dirname $0` && pwd);
 
-
-# mvn -DskipTests=true -f s3-sample/pom.xml clean install
+service_broker=s3-service-broker
+mvn -DskipTests=true -f s3-sample/pom.xml clean install
 mvn -DskipTests=true -f s3-service-broker/pom.xml clean install
 
 function reset(){
 
     cf d -f s3-sample-app
-    cf d -f s3-broker
+    cf d -f s3-service-broker
 
     cf ds -f s3-service
-    cf ds -f s3-broker-db
+    cf ds -f s3-service-broker-db
 
-    cf purge-service-instance -f s3-service
+    cf purge-service-instance -f ${service_broker}
     cf delete-service-broker -f amazon-s3
     cf delete-orphaned-routes -f
     cf purge-service-offering amazon-s3 -f
@@ -25,21 +25,21 @@ function reset(){
 
 function deploy_service_broker_app(){
     cd ${root}/s3-service-broker
-    cf create-service p-mysql 512mb s3-broker-db
+    cf create-service p-mysql 512mb ${service_broker}-db
     cf push --no-start
-    cf set-env s3-broker AWS_ACCESS_KEY_ID ${AWS_ACCESS_KEY_ID}
-    cf set-env s3-broker AWS_SECRET_ACCESS_KEY ${AWS_SECRET_ACCESS_KEY}
-    cf start s3-broker
+    cf set-env $service_broker AWS_ACCESS_KEY_ID ${AWS_ACCESS_KEY_ID}
+    cf set-env $service_broker AWS_SECRET_ACCESS_KEY ${AWS_SECRET_ACCESS_KEY}
+    cf start $service_broker
 }
 
 function configure_service_broker(){
-    cf create-service-broker amazon-s3 admin admin http://s3-broker.local.pcfdev.io -v
-    cf enable-service-access s3-service-broker -p s3-basic
+    cf create-service-broker amazon-s3 admin admin http://${service_broker}.local.pcfdev.io -v
+    cf enable-service-access $service_broker -p basic
 }
 
 function deploy_sample_app(){
     cd ${root}/s3-sample
-    cf create-service amazon-s3 s3-basic s3-service
+    cf create-service amazon-s3 basic s3-service
     cf push
 }
 
