@@ -14,12 +14,10 @@ public class ServiceInstanceBinding {
 	@Id
 	private String id;
 
-	private String serviceInstanceId , syslogDrainUrl , appGuid , username, accessKeyId, accessKeySecret ;
-
+	private String serviceInstanceId, syslogDrainUrl, appGuid;
 
 	public ServiceInstanceBinding(String id,
 	                              String serviceInstanceId,
-	                              String username, String accessKeyId, String accessKeySecret,
 	                              String syslogDrainUrl,
 	                              String appGuid) {
 		this.id = id;

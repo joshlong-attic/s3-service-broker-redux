@@ -46,7 +46,7 @@ public class DefaultServiceInstanceBindingService implements ServiceInstanceBind
 		ServiceInstanceBinding binding = new ServiceInstanceBinding(
 				request.getBindingId(),
 				request.getServiceInstanceId(),
-				username, accessKeyId, secretAccessKey, null,
+				null,
 				String.class.cast(request.getBindResource().getOrDefault("app_guid", request.getAppGuid())));
 
 		this.serviceInstanceBindingRepository.save(binding);

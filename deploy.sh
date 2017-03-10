@@ -10,7 +10,7 @@ mvn -DskipTests=true -f s3-sample/pom.xml clean install
 mvn -DskipTests=true -f s3-service-broker/pom.xml clean install
 
 function reset(){
-
+    cf purge-service-instance -f s3-service
     cf d -f s3-sample-app
     cf d -f s3-service-broker
 
@@ -48,8 +48,8 @@ function update_broker(){
   cf push
 }
 
-#reset
-#deploy_service_broker_app
-#configure_service_broker
-update_broker
+reset
+deploy_service_broker_app
+configure_service_broker
+# update_broker
 deploy_sample_app
